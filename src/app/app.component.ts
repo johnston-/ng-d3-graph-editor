@@ -8,10 +8,10 @@ import * as d3 from 'd3';
 })
 export class AppComponent {
   title = 'ng-d3-graph-editor';
-  @ViewChild('graphContainer') graphContainer: ElementRef;
+  @ViewChild('graphContainer', { static: true }) graphContainer: ElementRef;
 
   width = 960;
-  height = 600;
+  height = 700;
   colors = d3.scaleOrdinal(d3.schemeCategory10);
 
   svg: any;
@@ -273,7 +273,7 @@ export class AppComponent {
       .attr('x', 0)
       .attr('y', 4)
       .attr('class', 'id')
-      .text((d) => d.id);
+      .text((d) => 'guh'+ d.id);
 
     this.circle = g.merge(this.circle);
 
