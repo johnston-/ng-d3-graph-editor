@@ -1,5 +1,6 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import * as d3 from 'd3';
+import { GraphConfigSchema } from './models/sero-graph';
 
 @Component({
   selector: 'app-root',
@@ -34,23 +35,25 @@ export class AppComponent {
   lastKeyDown = -1;
 
   nodes = [
-    { id: 0, reflexive: false },
-    { id: 1, reflexive: true },
-    { id: 2, reflexive: false }
+    { id: "0", reflexive: false },
+    { id: "1", reflexive: true },
+    { id: "2", reflexive: false }
   ];
   links = [
-    { source: this.nodes[0], target: this.nodes[1], left: false, right: true },
-    { source: this.nodes[1], target: this.nodes[2], left: false, right: true }
+    { source: "0", target: "1", left: false, right: true },
+    { source: "1", target: "2", left: false, right: true }
   ];
 
   ngAfterContentInit() {
+    //process GraphConfig
+    //load GraphObject
+
     const rect = this.graphContainer.nativeElement.getBoundingClientRect();
     console.log(rect.width, rect.height);
 
     this.width = rect.width;
 
     this.svg = d3.select('#graphContainer')
-      .attr('oncontextmenu', 'return false;')
       .attr('width', this.width)
       .attr('height', this.height);
 
@@ -118,9 +121,7 @@ export class AppComponent {
     this.svg.on('mousedown', (dataItem, value, source) => this.mousedown(dataItem, value, source))
       .on('mousemove', (dataItem) => this.mousemove(dataItem))
       .on('mouseup', (dataItem) => this.mouseup(dataItem));
-    d3.select(window)
-      .on('keydown', this.keydown)
-      .on('keyup', this.keyup);
+
     this.restart();
   }
 
@@ -201,8 +202,8 @@ export class AppComponent {
     g.append('svg:circle')
       .attr('class', 'node')
       .attr('r', 12)
-      .style('fill', (d) => (d === this.selectedNode) ? d3.rgb(this.colors(d.id)).brighter().toString() : this.colors(d.id))
-      .style('stroke', (d) => d3.rgb(this.colors(d.id)).darker().toString())
+      .style('fill', (d,i) => (d === this.selectedNode) ? d3.rgb(this.colors(i)).brighter().toString() : this.colors(i))
+      .style('stroke', (d,i) => d3.rgb(this.colors(i)).darker().toString())
       .classed('reflexive', (d) => d.reflexive)
       .on('mouseover', function (d) {
         if (!this.mousedownNode || d === this.mousedownNode) return;
@@ -273,7 +274,7 @@ export class AppComponent {
       .attr('x', 0)
       .attr('y', 4)
       .attr('class', 'id')
-      .text((d) => 'guh'+ d.id);
+      .text((d) => d.id);
 
     this.circle = g.merge(this.circle);
 
@@ -294,7 +295,7 @@ export class AppComponent {
     // insert new node at point
     const point = d3.mouse(d3.event.currentTarget);
     // const point = d3.mouse(this);
-    const node = { id: ++this.lastNodeId, reflexive: false, x: point[0], y: point[1] };
+    const node = { id: ++this.lastNodeId+"", reflexive: false, x: point[0], y: point[1] };
     this.nodes.push(node);
 
     this.restart();
@@ -328,73 +329,6 @@ export class AppComponent {
     const toSplice = this.links.filter((l) => l.source === node || l.target === node);
     for (const l of toSplice) {
       this.links.splice(this.links.indexOf(l), 1);
-    }
-  }
-
-  keydown() {
-    d3.event.preventDefault();
-
-    if (this.lastKeyDown !== -1) return;
-    this.lastKeyDown = d3.event.keyCode;
-
-    // ctrl
-    if (d3.event.keyCode === 17) {
-      this.circle.call(this.drag);
-      this.svg.classed('ctrl', true);
-    }
-
-    if (!this.selectedNode && !this.selectedLink) return;
-
-    switch (d3.event.keyCode) {
-      case 8: // backspace
-      case 46: // delete
-        if (this.selectedNode) {
-          this.nodes.splice(this.nodes.indexOf(this.selectedNode), 1);
-          this.spliceLinksForNode(this.selectedNode);
-        } else if (this.selectedLink) {
-          this.links.splice(this.links.indexOf(this.selectedLink), 1);
-        }
-        this.selectedLink = null;
-        this.selectedNode = null;
-        this.restart();
-        break;
-      case 66: // B
-        if (this.selectedLink) {
-          // set link direction to both left and right
-          this.selectedLink.left = true;
-          this.selectedLink.right = true;
-        }
-        this.restart();
-        break;
-      case 76: // L
-        if (this.selectedLink) {
-          // set link direction to left only
-          this.selectedLink.left = true;
-          this.selectedLink.right = false;
-        }
-        this.restart();
-        break;
-      case 82: // R
-        if (this.selectedNode) {
-          // toggle node reflexivity
-          this.selectedNode.reflexive = !this.selectedNode.reflexive;
-        } else if (this.selectedLink) {
-          // set link direction to right only
-          this.selectedLink.left = false;
-          this.selectedLink.right = true;
-        }
-        this.restart();
-        break;
-    }
-  }
-
-  keyup() {
-    this.lastKeyDown = -1;
-
-    // ctrl
-    if (d3.event.keyCode === 17) {
-      this.circle.on('.drag', null);
-      this.svg.classed('ctrl', false);
     }
   }
 }
