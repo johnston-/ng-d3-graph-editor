@@ -44,12 +44,13 @@ export class AppComponent {
     { source: "1", target: "2", left: false, right: true }
   ];
 
+  triples = []
+
   ngAfterContentInit() {
     //process GraphConfig
     //load GraphObject
 
     const rect = this.graphContainer.nativeElement.getBoundingClientRect();
-    console.log(rect.width, rect.height);
 
     this.width = rect.width;
 
@@ -125,6 +126,12 @@ export class AppComponent {
     this.restart();
   }
 
+  loadGraph(json){
+    this.nodes = json.nodes
+    this.links = json.links
+    this.triples = json.triples
+  }
+
 
   // update force layout (called automatically each iteration)
   tick() {
@@ -135,8 +142,8 @@ export class AppComponent {
       const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       const normX = deltaX / dist;
       const normY = deltaY / dist;
-      const sourcePadding = d.left ? 17 : 12;
-      const targetPadding = d.right ? 17 : 12;
+      const sourcePadding = d.left ? 25 : 20;
+      const targetPadding = d.right ? 25 : 20;
       const sourceX = d.source.x + (sourcePadding * normX);
       const sourceY = d.source.y + (sourcePadding * normY);
       const targetX = d.target.x - (targetPadding * normX);
@@ -201,7 +208,7 @@ export class AppComponent {
 
     g.append('svg:circle')
       .attr('class', 'node')
-      .attr('r', 12)
+      .attr('r', 20)
       .style('fill', (d,i) => (d === this.selectedNode) ? d3.rgb(this.colors(i)).brighter().toString() : this.colors(i))
       .style('stroke', (d,i) => d3.rgb(this.colors(i)).darker().toString())
       .classed('reflexive', (d) => d.reflexive)
@@ -232,7 +239,7 @@ export class AppComponent {
         this.restart();
       })
       .on('mouseup', (dataItem: any) => {
-        debugger;
+        //debugger;
         if (!this.mousedownNode) return;
 
         // needed by FF
@@ -275,6 +282,11 @@ export class AppComponent {
       .attr('y', 4)
       .attr('class', 'id')
       .text((d) => d.id);
+
+    g.append('svg:image')
+      .attr('height', 24)
+      .attr('width', 24)
+      .attr('xlink:href', 'assets/multi-choice-icon.svg')
 
     this.circle = g.merge(this.circle);
 
