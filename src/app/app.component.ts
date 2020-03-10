@@ -22,6 +22,8 @@ export class AppComponent {
   drag: any;
   dragLine: any;
 
+  nodeGroup: any
+  linkGroup: any
 
   // mouse event vars
   selectedNode = null;
@@ -35,9 +37,9 @@ export class AppComponent {
   lastKeyDown = -1;
 
   nodes = [
-    { id: "0", reflexive: false },
-    { id: "1", reflexive: true },
-    { id: "2", reflexive: false }
+    { id: "0", type: "concept",  reflexive: false },
+    { id: "1", type: "relation", reflexive: true },
+    { id: "2", type: "concept", reflexive: false, icon: true }
   ];
   links = [
     { source: "0", target: "1", left: false, right: true },
@@ -116,7 +118,8 @@ export class AppComponent {
 
     // handles to link and node element groups
     this.path = this.svg.append('svg:g').selectAll('path');
-    this.circle = this.svg.append('svg:g').selectAll('g');
+    //this.circle = this.svg.append('svg:g').selectAll('g');
+    this.nodeGroup = this.svg.append('svg:g').selectAll('.node')
 
     // app starts here
     this.svg.on('mousedown', (dataItem, value, source) => this.mousedown(dataItem, value, source))
@@ -152,7 +155,8 @@ export class AppComponent {
       return `M${sourceX},${sourceY}L${targetX},${targetY}`;
     });
 
-    this.circle.attr('transform', (d) => `translate(${d.x},${d.y})`);
+    //this.circle.attr('transform', (d) => `translate(${d.x},${d.y})`);
+    this.nodeGroup.attr('transform', (d) => `translate(${d.x},${d.y})`);
   }
 
   resetMouseVars() {
@@ -193,18 +197,26 @@ export class AppComponent {
 
     // circle (node) group
     // NB: the function arg is crucial here! nodes are known by id, not by index!
-    this.circle = this.circle.data(this.nodes, (d) => d.id);
+    //this.circle = this.circle.data(this.nodes, (d) => d.id);
+    this.nodeGroup = this.nodeGroup.data(this.nodes, (d) => d.id);
+
 
     // update existing nodes (reflexive & selected visual states)
-    this.circle.selectAll('circle')
+    //this.circle.selectAll('circle')
+      //.style('fill', (d) => (d === this.selectedNode) ? d3.rgb(this.colors(d.id)).brighter().toString() : this.colors(d.id))
+      //.classed('reflexive', (d) => d.reflexive);
+
+    this.nodeGroup.selectAll(".node")
       .style('fill', (d) => (d === this.selectedNode) ? d3.rgb(this.colors(d.id)).brighter().toString() : this.colors(d.id))
       .classed('reflexive', (d) => d.reflexive);
 
     // remove old nodes
-    this.circle.exit().remove();
+    //this.circle.exit().remove();
+    this.nodeGroup.exit().remove();
 
     // add new nodes
-    const g = this.circle.enter().append('svg:g');
+    //const g = this.circle.enter().append('svg:g');
+    const g = this.nodeGroup.enter().append('svg:g').attr('class', 'node');
 
     g.append('svg:circle')
       .attr('class', 'node')
@@ -277,18 +289,22 @@ export class AppComponent {
       });
 
     // show node IDs
-    g.append('svg:text')
+    g.filter(x => !x.icon).append('svg:text')
       .attr('x', 0)
       .attr('y', 4)
       .attr('class', 'id')
       .text((d) => d.id);
 
-    g.append('svg:image')
-      .attr('height', 24)
-      .attr('width', 24)
+    //add icons
+    g.filter(x => x.icon).append('svg:image')
+      .attr('height', 26)
+      .attr('width', 26)
+      .attr('x', -12)
+      .attr('y', -12)
       .attr('xlink:href', 'assets/multi-choice-icon.svg')
 
-    this.circle = g.merge(this.circle);
+    //this.circle = g.merge(this.circle);
+    this.nodeGroup = g.merge(this.nodeGroup);
 
     // set the graph in motion
     this.force
